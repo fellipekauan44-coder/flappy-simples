@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Flappy Simples</title>
+  <style>
+    body {
+      background: #111;
+      color: white;
+      text-align: center;
+      font-family: Arial;
+    }
+    canvas {
+      background: #70c5ce;
+      display: block;
+      margin: 0 auto;
+      border: 3px solid white;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Flappy Simples 🐤</h1>
+<p>Clique ou aperte espaço para jogar</p>
+
+<canvas id="game" width="400" height="500"></canvas>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+let started = false;
+let gameOver = false;
+let score = 0;
+
+// PASSARO
+let bird = {
+  x: 60,
+  y: 200,
+  size: 20,
+  velocity: 0,
+  gravity: 0.5,
+  jump: -8
+};
+
+// CANOS
+let pipes = [];
+let frame = 0;
+
+// CONTROLES
+document.addEventListener("click", control);
+document.addEventListener("keydown", e => {
+  if (e.code === "Space") control();
+});
+
+function control() {
+  if (gameOver) {
+    resetGame();
+    return;
+  }
+  started = true;
+  bird.velocity = bird.jump;
+}
+
+function resetGame() {
+  bird.y = 200;
+  bird.velocity = 0;
+  pipes = [];
+  score = 0;
+  frame = 0;
+  gameOver = false;
+  started = false;
+}
+
+// LOOP
+function update() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // FUNDO
+  ctx.fillStyle = "#70c5ce";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // PASSARO
+  ctx.fillStyle = "yellow";
+  ctx.fillRect(bird.x, bird.y, bird.size, bird.size);
+
+  if (started && !gameOver) {
+    bird.velocity += bird.gravity;
+    bird.y += bird.velocity;
+  }
+
+  // CANOS
+  if (frame % 120 === 0) {
+    let top = Math.random() * 200 + 20;
+    pipes.push({
+      x: canvas.width,
+      top: top,
+      bottom: top + 120,
+      passed: false
+    });
+  }
+
+  pipes.forEach(p => {
+    p.x -= 2;
+
+    ctx.fillStyle = "green";
+    ctx.fillRect(p.x, 0, 50, p.top);
+    ctx.fillRect(p.x, p.bottom, 50, canvas.height);
+
+    // COLISÃO
+    if (
+      bird.x < p.x + 50 &&
+      bird.x + bird.size > p.x &&
+      (bird.y < p.top || bird.y + bird.size > p.bottom)
+    ) {
+      gameOver = true;
+    }
+
+    // PONTO
+    if (!p.passed && p.x + 50 < bird.x) {
+      p.passed = true;
+      score++;
+    }
+  });
+
+  // CHÃO
+  if (bird.y + bird.size > canvas.height) {
+    gameOver = true;
+  }
+
+  // TEXTO
+  ctx.fillStyle = "white";
+  ctx.font = "20px Arial";
+  ctx.fillText("Pontos: " + score, 10, 30);
+
+  if (!started) {
+    ctx.fillText("Clique para começar", 100, 250);
+  }
+
+  if (gameOver) {
+    ctx.fillText("Game Over!", 140, 220);
+    ctx.fillText("Clique para reiniciar", 100, 250);
+  }
+
+  frame++;
+  requestAnimationFrame(update);
+}
+
+update();
+</script>
+
+</body>
+</html>
